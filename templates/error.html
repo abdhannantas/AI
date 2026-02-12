@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolt AI - Error {{ code }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #040608;
+            --text-color: #ffffff;
+            --accent-color: #007bff;
+            --danger: #dc3545;
+        }
+
+        body.light-mode {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --accent-color: #007bff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .error-container {
+            max-width: 500px;
+            padding: 40px;
+            animation: errorIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes errorIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-icon {
+            font-size: 80px;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px var(--accent-color));
+        }
+
+        h1 {
+            font-size: 100px;
+            margin-bottom: 10px;
+            opacity: 0.2;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .error-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .error-desc {
+            color: #889;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .btn-home {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 123, 255, 0.3);
+        }
+
+        /* Splash-like bolt drawing for error page background? Maybe just keep it simple. */
+    </style>
+</head>
+
+<body id="errorBody">
+    <h1>{{ code }}</h1>
+    <div class="error-container">
+        <div class="error-icon">
+            <i class="fas {{ icon }}"></i>
+        </div>
+        <div class="error-title">{{ title }}</div>
+        <p class="error-desc">{{ message }}</p>
+        <a href="/" class="btn-home">Return to Synapse</a>
+    </div>
+
+    <script>
+        // Sync theme with main app
+        const savedTheme = localStorage.getItem('bolt-theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.getElementById('errorBody').classList.add('light-mode');
+        }
+    </script>
+</body>
+
+</html>
