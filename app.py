@@ -1,21 +1,26 @@
 import os
 import json
 import uuid
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from dotenv import load_dotenv
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, Response
+from datetime import timedelta, datetime
 import requests
+from duckduckgo_search import DDGS
 
-from datetime import timedelta
+# Try to load env but don't fail if missing (it will be missing on Vercel)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-load_dotenv()
 app = Flask(__name__)
-# Using a static key so sessions survive restarts
-app.secret_key = os.getenv("SESSION_SECRET", "bolt-ai-secret-key-12345")
+app.secret_key = os.getenv("SESSION_SECRET", "bolt-ai-persistence-key-8812")
 app.permanent_session_lifetime = timedelta(days=30)
 
-CHATS_FILE = "chats.json"
-USERS_FILE = "users.json"
-CONFIG_FILE = "config.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CHATS_FILE = os.path.join(BASE_DIR, "chats.json")
+USERS_FILE = os.path.join(BASE_DIR, "users.json")
+CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@bolt.io")
 
 def load_json(filename, default={}):
@@ -29,8 +34,15 @@ def load_json(filename, default={}):
     return default
 
 def save_json(filename, data):
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+    except Exception as e:
+        print(f"Warning: Could not save to {filename}: {e}")
+
+@app.route("/health")
+def health():
+    return "Synapse Nominal", 200
 
 @app.route("/")
 def home():
@@ -129,9 +141,10 @@ def signup():
     users[email] = {
         "name": name, 
         "password": password, 
-        "ip": request.remote_addr,
+        "ip": request.headers.get('X-Forwarded-For', request.remote_addr),
         "banned": False
     }
+    if "," in str(users[email]["ip"]): users[email]["ip"] = users[email]["ip"].split(",")[0].strip()
     save_json(USERS_FILE, users)
     
     session.permanent = True
@@ -153,7 +166,8 @@ def login_api():
         
         if user["password"] == password:
             # Update IP on login
-            user["ip"] = request.remote_addr
+            user["ip"] = request.headers.get('X-Forwarded-For', request.remote_addr)
+            if "," in str(user["ip"]): user["ip"] = user["ip"].split(",")[0].strip()
             
             # Initialize search stats if not present
             if "search_count" not in user:
@@ -214,7 +228,6 @@ def get_chats():
     user_chats = all_chats.get(user_email, [])
     return jsonify(user_chats)
 
-from flask import Response
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -251,7 +264,6 @@ def chat():
     search_context = ""
     if use_search:
         # Check usage limit
-        from datetime import datetime
         today = datetime.now().strftime("%Y-%m-%d")
         users = load_json(USERS_FILE, default={})
         user = users.get(user_email)
@@ -271,7 +283,6 @@ def chat():
             save_json(USERS_FILE, users)
             
             # Perform DuckDuckGo Search
-            from duckduckgo_search import DDGS
             try:
                 with DDGS() as ddgs:
                     results = [r for r in ddgs.text(user_input, max_results=5)]
