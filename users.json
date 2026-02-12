@@ -1,0 +1,16 @@
+{
+    "abdhannantas@gmail.com": {
+        "name": "Abdul Hannan Tassaduq",
+        "password": "19052010",
+        "ip": "127.0.0.1",
+        "search_count": 1,
+        "last_search_date": "2026-02-12"
+    },
+    "admin@bolt.io": {
+        "name": "Admin",
+        "password": "bolt",
+        "ip": "127.0.0.1",
+        "search_count": 0,
+        "last_search_date": ""
+    }
+}
